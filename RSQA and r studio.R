@@ -44,25 +44,57 @@ library('ggpubr')
 head(Results_graph)
 Results_graph
 pyrene_solids<-Results_graph[Results_graph$PARM_NM=="Pyrene, solids",]
+
+#might delete this code
 pyrene_solids$COUNTY_NM
 pyrene_solids
 counties<-c("Alameda County", 'Contra Costa County','Marin County', 'Monterey County', "Napa County", "San Benito County", "San Luis Obispo County", "San Mateo County", "Santa Barbara County", "Santa Clara County", "Santa Cruz County", "Solano County", "Sonoma County")
-filter(pyrene_solids, COUNTY_NM%in%counties)
-CONC_PER_SITE<-pyrene_solids$RESULT_VA
-CONC_PER_SITE
-theme_set(theme_pubclean())
-aaa<-ggplot(pyrene_solids, aes(x=counties, y=CONC_PER_SITE))
-aaa + geom_jitter(
-  aes(shape=counties, color=counties),
-  position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.8),
-  size=1.2)+
-  stats_summary(
-    aes(color=counties),R
-    fun.data="mean_sdl", fun.args = list(mult=1),
-    geom='pointrange', size=0.4,
-    position=position_dodge(0.8)) +
-  scale_color_manual(values =c("#00AFBB", "#E7B800"))
-ggplot(Results_graph, aes(counties, CONC_PER_SITE))+
-       geom_jitter(aes(color=counties))+
-  
-  
+pyrene_solids_and_counties<-filter(pyrene_solids, COUNTY_NM%in%counties)
+pyrene_solids_and_counties
+
+
+#start of code for the dot chart graph
+theme_set(theme_bw())
+head(pyrene_solids_and_counties)
+e <-ggplot(pyrene_solids_and_counties, aes(x=COUNTY_NM, y=RESULT_VA))
+
+f<-e + geom_jitter(
+  aes(shape=COUNTY_NM, color=COUNTY_NM),
+  position = position_jitter(0.2),
+  size=1.2)
+f
+g<-f + ggtitle("Max Conc. of Pyrene Solids") +
+  xlab("County Name") + ylab("Max Conc./Site")
+g
+#retry dotpot
+aaa<-ggplot(pyrene_solids, aes(x=COUNTY_NM, y=RESULT_VA, group=cond)) +
+  geom_jitter()
+aab<-aaa + geom_jitter(
+  aes(shape=COUNTY_NM, color=COUNTY_NM),
+  position=position_jitter(0.2),
+  size=1.2)
+aab
+#graph that is not a dotplot, the graph that turned out though
+plot<-ggplot(pyrene_solids, aes(COUNTY_NM, RESULT_VA, color = COUNTY_NM)) + geom_point()
+plot
+#repeating graph from data used in step 3
+
+plot2<-ggplot(ChlorimuronEthyl, aes(COUNTY_NM, RESULT_VA, color =COUNTY_NM)) + geom_point()
+plot2
+
+#graph2 in step 31, map
+merged_data<-pyrene_solids%>%left_join(Sites_graph, by="SITE_NO")
+california<-ne_countries(scale='medium', returnclass = 'sf')
+california_map<-ggplot(data=california) +
+  geom_sf() + theme_classic() +
+  labs(title='World Map', x='lat',y='long')
+california_map
+california_map2<-ggplot(data=california)+
+  geom_sf() + theme_classic() +
+  aes(title="Map of California Sampling Sites for Pyrene Solids", x="Longitude", y="Latitude",
+      subtitle=paste0("A total of", (length(unique(merged_data$SITE_NO))),"sites")) + 
+        geom_point(data=merged_data, aes(x="DEC_LONG_VA", y="DEC_LONG_VA"), size=1, shape=19) +
+  coord_sf(xlim=c((min(Sites_graph$DEC_LONG_VA)),(max(Sites_graph$DEC_LONG_VA))), ylim=c((min(Sites_graph$DEC_LAT_VA)),(max(Sites_graph$DEC_LAT_VA))))
+
+california_map2
+      
